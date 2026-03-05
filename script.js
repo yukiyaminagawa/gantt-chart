@@ -5,11 +5,7 @@ const DAY_WIDTH = 40;
 const baseDate = new Date("2026-03-01");
 
 //タスクデータ
-const tasks = [
-  { title: "JS復習", start: "2026-03-03", end: "2026-03-08" },
-  { title: "修論修正", start: "2026-03-05", end: "2026-03-15" },
-  { title: "ガント改善", start: "2026-03-12", end: "2026-03-18" },
-];
+let tasks = [];
 
 //日数計算関数
 function getDays(start, end) {
@@ -67,11 +63,23 @@ function render() {
 
     const div = document.createElement("div");
     div.className = "task";
-    div.textContent = task.title;
 
     div.style.width = duration * DAY_WIDTH + "px";
     div.style.left = offset * DAY_WIDTH + "px";
     div.style.top = 30 + index * 50 + "px";
+
+    const titleSpan = document.createElement("span");
+    titleSpan.textContent = task.title;
+    div.appendChild(titleSpan);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "x";
+    deleteBtn.style.marginLeft = "8px";
+
+    deleteBtn.addEventListener("click", () => {
+      deleteTask(task.id);
+    });
+    div.appendChild(deleteBtn);
 
     gantt.appendChild(div);
   });
@@ -91,15 +99,16 @@ function render() {
   todayBox.style.boxSizing = "border-box";
   todayBox.style.pointerEvents = "none";
   todayBox.style.background = "rgba(255,80,80,0.08)";
-
   gantt.appendChild(todayBox);
 }
 
-const saved = localStorage.getItem("tasks");
-if (saved) {
-  tasks.length = 0;
-  tasks.push(...JSON.parse(saved));
+function deleteTask(id) {
+  tasks = tasks.filter((task) => task.id !== id);
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  render();
 }
+
+const saved = localStorage.getItem("tasks");
 render();
 
 const titleInput = document.querySelector("#titleInput");
@@ -109,6 +118,7 @@ const addBtn = document.querySelector("#addBtn");
 
 addBtn.addEventListener("click", () => {
   const newTask = {
+    id: Date.now(), //一意ID
     title: titleInput.value,
     start: startInput.value,
     end: endInput.value,
@@ -117,6 +127,7 @@ addBtn.addEventListener("click", () => {
   tasks.push(newTask);
   localStorage.setItem("tasks", JSON.stringify(tasks));
   render();
+  // console.log("render前:", tasks);
 
   titleInput.value = "";
   startInput.value = "";
@@ -124,3 +135,9 @@ addBtn.addEventListener("click", () => {
 
   console.log(localStorage.getItem("tasks"));
 });
+
+if (saved) {
+  tasks.length = 0;
+  tasks.push(...JSON.parse(saved));
+  render();
+}
